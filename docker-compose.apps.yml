@@ -1,0 +1,68 @@
+services:
+  # --- LARAVEL (PHP) ---
+  backend-core:
+    build:
+      context: ./backend-core
+      dockerfile: Dockerfile
+    container_name: senai_laravel
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend-core:/var/www/html
+    networks:
+      - senai-net
+    depends_on:
+      - mysql_check
+    environment:
+      # ATENÇÃO: Dentro do Docker, o host do banco é o NOME DO SERVIÇO no outro arquivo
+      DB_HOST: senai_mysql
+      DB_DATABASE: senai_core_db
+      DB_USERNAME: senai_user
+      DB_PASSWORD: password
+
+  # --- PYTHON (FLASK) ---
+  backend-analytics:
+    build:
+      context: ./backend-analytics
+      dockerfile: Dockerfile
+    container_name: senai_python
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend-analytics:/app
+    networks:
+      - senai-net
+    environment:
+      MONGO_URI: "mongodb://root:root@senai_mongo:27017/"
+    command: python app.py
+
+  # --- NEXT.JS (NODE) ---
+  frontend-dashboard:
+    build:
+      context: ./frontend-dashboard
+      dockerfile: Dockerfile
+    container_name: senai_next
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend-dashboard:/app
+      - /app/node_modules
+    networks:
+      - senai-net
+    environment:
+      # O Next.js (lado do servidor) precisa ver os containers pelos nomes
+      NEXT_PUBLIC_API_LARAVEL: "http://localhost:8000/api"
+      NEXT_PUBLIC_API_PYTHON: "http://localhost:5001"
+    command: npm run dev
+
+  # Utilitário apenas para esperar o MySQL estar pronto antes de subir o Laravel
+  mysql_check:
+    image: busybox
+    networks:
+      - senai-net
+    command: sh -c 'until nc -z senai_mysql 3306; do echo "Esperando MySQL..."; sleep 2; done;'
+
+networks:
+  # Usar a rede que já foi criada no docker-compose.infra.yml
+  senai-net:
+    external: true
