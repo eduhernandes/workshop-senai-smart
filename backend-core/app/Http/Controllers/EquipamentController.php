@@ -13,8 +13,9 @@ class EquipamentController extends Controller
     public function index()
     {
         //funciona como o GET /equipaments
-
+        return response()->json(Equipament::all(), 200);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -22,6 +23,9 @@ class EquipamentController extends Controller
     public function store(Request $request)
     {
         //funciona como o POST /equipaments
+        $equipament = Equipament::create($request->all());
+
+        return response()->json($equipament, 201);
     }
 
     /**
@@ -30,6 +34,7 @@ class EquipamentController extends Controller
     public function show(Equipament $equipament)
     {
         //Funciona como o GET /equipaments/{id}
+        return response()->json($equipament, 200);
     }
 
     /**
@@ -37,7 +42,9 @@ class EquipamentController extends Controller
      */
     public function update(Request $request, Equipament $equipament)
     {
-        //Funciona como o PUT /equipaments/{id}
+        //Funciona como o PUT/PATCH /equipaments/{id}
+        $equipament->update($request->all());
+        return response()->json($equipament, 200);
     }
 
     /**
@@ -46,5 +53,9 @@ class EquipamentController extends Controller
     public function destroy(Equipament $equipament)
     {
         //Funciona como o DELETE /equipaments/{id}
+        $equipament->delete();
+        return response()->json(null, 204);
     }
+
 }
+
